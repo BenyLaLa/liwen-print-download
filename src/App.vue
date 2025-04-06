@@ -112,7 +112,7 @@ const fetchData = async (page = 1, orderSnList = null, status = '') => {
     params.status = status
 
     // 使用 axios 的 paramsSerializer 来自定义参数序列化
-    const response = await axios.get('http://localhost:8089/api/v1/custom/customs', {
+    const response = await axios.get('https://ai.cbbeny.cn/api/api/v1/custom/customs', {
       params,
       paramsSerializer: {
         indexes: null // 这将确保数组被序列化为 orderSns=value1,value2,value3 的形式
@@ -155,7 +155,7 @@ const handleExport = async (item) => {
 
   try {
     const response = await axios.post(
-        'http://localhost:8089/office/generate-excel',
+        'https://ai.cbbeny.cn/api/office/generate-excel',
         item,
         {
           responseType: 'blob' // 设置响应类型为blob，用于处理文件下载
@@ -226,7 +226,7 @@ const handleBatchExport = async () => {
   try {
     for (const item of selectedItems) {
       const response = await axios.post(
-          'http://localhost:8089/office/generate-excel',
+          'https://ai.cbbeny.cn/api/office/generate-excel',
           item,
           {
             responseType: 'blob' // 设置响应类型为blob，用于处理文件下载
