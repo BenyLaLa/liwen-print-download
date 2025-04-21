@@ -1,6 +1,10 @@
 <template>
   <div class="container">
     <h2>订单列表</h2>
+    <!-- 新增隐藏列按钮 -->
+    <button @click="toggleColumnsVisibility" class="query-btn">
+      {{ isColumnsVisible ? '隐藏列' : '显示列' }}
+    </button>
     <!-- 新增查询条件12 -->
     <div class="search-condition">
       <label for="status">订单状态：</label>
@@ -15,36 +19,41 @@
       <table>
         <thead>
         <tr>
-          <th>
+          <th v-show="isColumnsVisible">
             <input type="checkbox" v-model="isAllChecked" @change="handleSelectAll" />
           </th>
-          <th>ID</th>
+          <th v-show="isColumnsVisible">ID</th>
           <th>订单编号</th>
-          <th>样式</th>
-          <th>模板名称</th>
-          <th>订单状态</th> <!-- 新增订单状态列 -->
-          <th>操作</th>
+          <th v-show="isColumnsVisible">样式</th>
+          <th v-show="isColumnsVisible">模板名称</th>
+          <th v-show="isColumnsVisible">订单状态</th> <!-- 新增订单状态列 -->
+          <th v-show="isColumnsVisible">操作</th>
+          <th v-show="isColumnsVisible">导出次数</th>
         </tr>
         </thead>
         <tbody>
         <tr v-for="item in tableData" :key="item.id">
-          <td>
+          <td v-show="isColumnsVisible">
             <input type="checkbox" v-model="item.checked" />
           </td>
-          <td>{{ item.id }}</td>
+          <td v-show="isColumnsVisible">{{ item.id }}</td>
           <td>{{ item.orderSn || '暂无' }}</td>
-          <td>{{ item.styleName }}</td>
-          <td>{{ item.templateName }}</td>
-          <td>{{ item.status ? '已定稿' : '未定稿' }}</td> <!-- 显示订单状态 -->
-          <td>
+          <td v-show="isColumnsVisible">{{ item.styleName }}</td>
+          <td v-show="isColumnsVisible">{{ item.templateName }}</td>
+          <td v-show="isColumnsVisible">{{ item.status ? '已定稿' : '未定稿' }}</td> <!-- 显示订单状态 -->
+          <td v-show="isColumnsVisible">
             <button
                 @click="handleExport(item)"
-                class="export-btn"
+                class="export-btn
+                {{ item.exportCount > 0 ? 'exported-btn' : '' }}
+                {{ item.exporting ? 'exporting-btn' : '' }}"
                 :disabled="item.exporting"
             >
               {{ item.exporting ? '导出中...' : '导出' }}
             </button>
           </td>
+          <!-- 显示导出次数 -->
+          <td v-show="isColumnsVisible">{{ item.exportCount || 0 }}</td>
         </tr>
         </tbody>
       </table>
@@ -96,6 +105,8 @@ const orderSns = ref('') // 新增订单编号输入框的值
 const inputPage = ref('') // 新增输入页码的值
 const selectedStatus = ref('-1') // 新增所选订单状态
 const isAllChecked = ref(false) // 全选状态
+// 新增响应式变量控制列显示状态
+const isColumnsVisible = ref(true)
 
 const fetchData = async (page = 1, orderSnList = null, status = '') => {
   try {
@@ -121,7 +132,7 @@ const fetchData = async (page = 1, orderSnList = null, status = '') => {
 
     if (response.data.code === '0000') {
       const { data } = response.data
-      tableData.value = data.data.map(item => ({ ...item, checked: false }))
+      tableData.value = data.data.map(item => ({ ...item, checked: false, exportCount: item.exportCount || 0}))
       totalPages.value = data.pages
       total.value = data.total
       currentPage.value = data.page
@@ -130,6 +141,11 @@ const fetchData = async (page = 1, orderSnList = null, status = '') => {
   } catch (error) {
     console.error('获取数据失败:', error)
   }
+}
+
+// 新增切换列显示状态的方法
+const toggleColumnsVisibility = () => {
+  isColumnsVisible.value = !isColumnsVisible.value
 }
 
 const handlePageChange = (page) => {
@@ -161,7 +177,7 @@ const handleExport = async (item) => {
           responseType: 'blob' // 设置响应类型为blob，用于处理文件下载
         }
     )
-
+    item.exportCount += 1
     // 创建下载链接
     const blob = new Blob([response.data], {
       type: response.headers['content-type']
@@ -270,6 +286,10 @@ onMounted(() => {
   padding: 20px;
 }
 
+.container button:first-child {
+  margin-bottom: 15px;
+}
+
 .table-container {
   margin: 20px 0;
   overflow-x: auto;
@@ -360,19 +380,11 @@ textarea {
 }
 
 .export-btn {
-  background-color: #1E88E5;
-  padding: 6px 12px;
-  font-size: 14px;
-  min-width: 80px;
+  background-color: #2196F3;
 }
 
-.export-btn:hover:not(:disabled) {
-  background-color: #1976D2;
-}
-
-.export-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.exported-btn {
+  background-color: #6ef55f;
 }
 
 td {
