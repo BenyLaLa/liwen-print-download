@@ -248,7 +248,7 @@ const handleBatchExport = async () => {
             responseType: 'blob' // 设置响应类型为blob，用于处理文件下载
           }
       )
-
+      item.exportCount += 1
       // 创建下载链接
       const blob = new Blob([response.data], {
         type: response.headers['content-type']
